@@ -3,8 +3,6 @@ package com.example.rus.ex_4_threads;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import java.util.concurrent.Semaphore;
-
 public class MainActivity extends AppCompatActivity {
 
 
@@ -18,57 +16,69 @@ public class MainActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
 
-        Semaphore a = new Semaphore(1);
-        Semaphore b = new Semaphore(0);
+        LockObject lock = new LockObject();
 
-        new Thread(new LeftLeg(a, b)).start();
-        new Thread(new RightLeg(b, a)).start();
+        new Thread(new LeftLeg(lock)).start();
+        new Thread(new RightLeg(lock)).start();
     }
 
     private class LeftLeg implements Runnable {
-        Semaphore inSem, outSem;
+        LockObject lock;
 
-        public LeftLeg(Semaphore inSem, Semaphore outSem) {
-            this.inSem = inSem;
-            this.outSem = outSem;
+        public LeftLeg(LockObject lock) {
+            this.lock = lock;
         }
 
         private boolean isRunning = true;
         @Override
         public void run() {
-            while (isRunning){
-                try {
-                    inSem.acquire();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            try{
+                synchronized (lock){
+                    while (isRunning){
+                        while (lock.isRight){
+                            lock.wait();
+                        }
+                        System.out.println("Left step");
+                        lock.isRight = true;
+                        lock.notifyAll();
+                    }
                 }
-                System.out.println("Left step");
-                outSem.release();
+            } catch (Exception e){
+                System.out.println(e.getMessage());
             }
+
         }
     }
 
     private class RightLeg implements Runnable {
-        Semaphore inSem, outSem;
+        LockObject lock;
 
-        public RightLeg(Semaphore inSem, Semaphore outSem) {
-            this.inSem = inSem;
-            this.outSem = outSem;
+        public RightLeg(LockObject lock) {
+            this.lock = lock;
         }
 
         private boolean isRunning = true;
         @Override
         public void run() {
-            while (isRunning){
-                try {
-                    inSem.acquire();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            try{
+                synchronized (lock){
+                    while (isRunning){
+                        while (!lock.isRight){
+                            lock.wait();
+                        }
+                        System.out.println("Right step");
+                        lock.isRight = false;
+                        lock.notifyAll();
+                    }
                 }
-                System.out.println("Right step");
-                outSem.release();
+            } catch (Exception e){
+                System.out.println(e.getMessage());
             }
         }
+    }
+
+    private class LockObject{
+        public volatile boolean isRight = true;
     }
 
 

@@ -8,6 +8,8 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
     LeftLeg leftLeg;
     RightLeg rightLeg;
+    Thread thread1;
+    Thread thread2;
 
 
     @Override
@@ -18,7 +20,6 @@ public class MainActivity extends AppCompatActivity {
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //testing thread
                 leftLeg.stopThread();
                 rightLeg.stopThread();
             }
@@ -33,8 +34,11 @@ public class MainActivity extends AppCompatActivity {
         leftLeg = new LeftLeg(lock);
         rightLeg = new RightLeg(lock);
 
-        new Thread(leftLeg).start();
-        new Thread(rightLeg).start();
+        thread1 = new Thread(leftLeg);
+        thread2 = new Thread(rightLeg);
+
+        thread1.start();
+        thread2.start();
     }
 
     @Override
@@ -106,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class LockObject{
+    private static class LockObject{
         volatile boolean isRight = true;
     }
 

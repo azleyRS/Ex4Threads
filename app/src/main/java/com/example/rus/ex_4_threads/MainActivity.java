@@ -2,14 +2,27 @@ package com.example.rus.ex_4_threads;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+    LeftLeg leftLeg;
+    RightLeg rightLeg;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        TextView textView = findViewById(R.id.stop_test_text_view);
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //testing thread
+                leftLeg.stopThread();
+                rightLeg.stopThread();
+            }
+        });
     }
 
     @Override
@@ -17,15 +30,24 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         LockObject lock = new LockObject();
+        leftLeg = new LeftLeg(lock);
+        rightLeg = new RightLeg(lock);
 
-        new Thread(new LeftLeg(lock)).start();
-        new Thread(new RightLeg(lock)).start();
+        new Thread(leftLeg).start();
+        new Thread(rightLeg).start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        leftLeg.stopThread();
+        rightLeg.stopThread();
     }
 
     private class LeftLeg implements Runnable {
-        LockObject lock;
+        final LockObject lock;
 
-        public LeftLeg(LockObject lock) {
+        LeftLeg(LockObject lock) {
             this.lock = lock;
         }
 
@@ -33,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try{
-                synchronized (lock){
-                    while (isRunning){
+                while (isRunning){
+                    synchronized (lock){
                         while (lock.isRight){
                             lock.wait();
                         }
@@ -46,14 +68,17 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e){
                 System.out.println(e.getMessage());
             }
+        }
 
+        void stopThread() {
+            isRunning = false;
         }
     }
 
     private class RightLeg implements Runnable {
-        LockObject lock;
+        final LockObject lock;
 
-        public RightLeg(LockObject lock) {
+        RightLeg(LockObject lock) {
             this.lock = lock;
         }
 
@@ -61,8 +86,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try{
-                synchronized (lock){
-                    while (isRunning){
+                while (isRunning){
+                    synchronized (lock){
                         while (!lock.isRight){
                             lock.wait();
                         }
@@ -75,10 +100,14 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println(e.getMessage());
             }
         }
+
+        void stopThread() {
+            isRunning = false;
+        }
     }
 
     private class LockObject{
-        public volatile boolean isRight = true;
+        volatile boolean isRight = true;
     }
 
 

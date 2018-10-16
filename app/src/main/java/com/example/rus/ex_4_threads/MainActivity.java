@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         rightLeg.stopThread();
     }
 
-    private class LeftLeg implements Runnable {
+    private static class LeftLeg implements Runnable {
         final LockObject lock;
 
         LeftLeg(LockObject lock) {
@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class RightLeg implements Runnable {
+    private static class RightLeg implements Runnable {
         final LockObject lock;
 
         RightLeg(LockObject lock) {
